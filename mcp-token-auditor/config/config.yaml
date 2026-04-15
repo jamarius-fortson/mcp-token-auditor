@@ -1,0 +1,55 @@
+# MCP Token Auditor Configuration
+
+auditor:
+  encoding: "o200k_base"              # tiktoken encoding (o200k_base | cl100k_base)
+  context_window_limit: 128000        # tokens — target model's limit
+  storage_backend: "sqlite"           # sqlite | postgresql
+  storage_path: "./audit.db"
+
+proxy:
+  listen_port: 8765
+  upstream_servers:
+    - id: "filesystem-server"
+      url: "http://localhost:3001"
+      transport: "sse"                # sse | websocket | stdio
+    - id: "github-server"
+      url: "http://localhost:3002"
+      transport: "websocket"
+
+alerts:
+  rules:
+    CTX_WARN:
+      threshold: 40                   # % of context window
+      enabled: true
+    CTX_CRITICAL:
+      threshold: 60
+      enabled: true
+    TOOL_BLOAT:
+      threshold: 300                  # tokens in tool description
+      enabled: true
+    SCHEMA_BLOAT:
+      threshold: 400                  # tokens in input_schema
+      enabled: true
+    CALL_SPIKE:
+      threshold: 60                   # calls per minute
+      enabled: true
+    SERVER_DRIFT:
+      threshold: 25                   # % deviation from baseline
+      enabled: true
+  webhook_url: ""                     # optional external alert sink
+
+dashboard:
+  websocket_port: 8766
+  cors_origins:
+    - "http://localhost:5173"
+    - "http://localhost:3000"
+
+compression_advisor:
+  min_confidence: 0.65                # minimum suggestion confidence score
+  min_description_tokens: 8           # floor for description compression
+  enabled: true
+
+security:
+  api_key: "your-secure-api-key-here-change-this-in-production"  # Generate a secure random key
+  rate_limit_requests: 100            # max requests per window
+  rate_limit_window_seconds: 60       # rate limit window in seconds

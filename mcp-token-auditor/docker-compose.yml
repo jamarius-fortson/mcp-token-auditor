@@ -1,0 +1,38 @@
+# Docker Compose for local development
+
+version: '3.8'
+
+services:
+  auditor:
+    build: .
+    ports:
+      - "8765:8765"  # REST API
+      - "8766:8766"  # WebSocket dashboard
+    environment:
+      - PYTHONUNBUFFERED=1
+      - CONFIG_PATH=/app/config/config.yaml
+      - AUDIT_DB_PATH=/app/data/audit.db
+    volumes:
+      - ./config:/app/config
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8765/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - auditor-network
+
+  # Optional: SQLite viewer UI (uncomment for development)
+  # adminer:
+  #   image: adminer
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     - ADMINER_DEFAULT_SERVER=db
+  #   networks:
+  #     - auditor-network
+
+networks:
+  auditor-network:
+    driver: bridge
